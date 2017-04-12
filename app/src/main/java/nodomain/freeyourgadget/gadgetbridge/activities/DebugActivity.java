@@ -35,6 +35,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+import android.widget.CompoundButton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +73,8 @@ public class DebugActivity extends GBActivity {
     private Button setTimeButton;
     private Button rebootButton;
     private Button HeartRateButton;
-    private Button testNewFunctionalityButton;
+    private Button BurnedCaloriesButton;
+    private ToggleButton HeartRateContinuousButton;
 
     private EditText editContent;
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -183,12 +186,34 @@ public class DebugActivity extends GBActivity {
                 GBApplication.deviceService().onReboot();
             }
         });
+
         HeartRateButton = (Button) findViewById(R.id.HearRateButton);
         HeartRateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 GB.toast("Measuring heart rate, please wait...", Toast.LENGTH_LONG, GB.INFO);
                 GBApplication.deviceService().onHeartRateTest();
+            }
+        });
+
+        HeartRateContinuousButton = (ToggleButton) findViewById(R.id.HeartRateContinuousButton);
+        HeartRateContinuousButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    GB.toast("Start heart rate continuous, please wait...", Toast.LENGTH_LONG, GB.INFO);
+                    GBApplication.deviceService().onEnableRealtimeHeartRateMeasurement(true);
+                } else {
+                    GB.toast("Stopping heart rate continuous, please wait...", Toast.LENGTH_LONG, GB.INFO);
+                    GBApplication.deviceService().onEnableRealtimeHeartRateMeasurement(false);
+                }
+            }
+        });
+
+        BurnedCaloriesButton = (Button) findViewById(R.id.BurnedCaloriesButton);
+        BurnedCaloriesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
@@ -231,14 +256,6 @@ public class DebugActivity extends GBActivity {
             @Override
             public void onClick(View v) {
                 testNotification();
-            }
-        });
-
-        testNewFunctionalityButton = (Button) findViewById(R.id.testNewFunctionality);
-        testNewFunctionalityButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                testNewFunctionality();
             }
         });
     }
