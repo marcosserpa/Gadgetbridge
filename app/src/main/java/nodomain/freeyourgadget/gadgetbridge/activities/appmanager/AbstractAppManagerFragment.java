@@ -21,7 +21,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -49,14 +48,11 @@ import java.util.UUID;
 
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
-import nodomain.freeyourgadget.gadgetbridge.activities.ExternalPebbleJSActivity;
 import nodomain.freeyourgadget.gadgetbridge.adapter.GBDeviceAppAdapter;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDeviceApp;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceService;
-import nodomain.freeyourgadget.gadgetbridge.service.devices.pebble.PebbleProtocol;
 import nodomain.freeyourgadget.gadgetbridge.util.FileUtils;
-import nodomain.freeyourgadget.gadgetbridge.util.PebbleUtils;
 
 
 public abstract class AbstractAppManagerFragment extends Fragment {
@@ -125,9 +121,8 @@ public abstract class AbstractAppManagerFragment extends Fragment {
                         LOG.info("will refresh list based on data from pebble");
                         refreshListFromPebble(intent);
                     }
-                } else if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) >= 3 || isCacheManager()) {
-                    refreshList();
                 }
+
                 mGBDeviceAppAdapter.notifyDataSetChanged();
             }
         }
@@ -200,28 +195,7 @@ public abstract class AbstractAppManagerFragment extends Fragment {
                             cachedAppList.add(new GBDeviceApp(UUID.fromString("cf1e816a-9db0-4511-bbb8-f60c48ca8fac"), "Golf (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
                         }
                         */
-                        if (mGBDevice != null) {
-                            if (PebbleUtils.hasHealth(mGBDevice.getModel())) {
-                                if (baseName.equals(PebbleProtocol.UUID_PEBBLE_HEALTH.toString())) {
-                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_PEBBLE_HEALTH, "Health (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
-                                    continue;
-                                }
-                            }
-                            if (PebbleUtils.hasHRM(mGBDevice.getModel())) {
-                                if (baseName.equals(PebbleProtocol.UUID_WORKOUT.toString())) {
-                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_WORKOUT, "Workout (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
-                                    continue;
-                                }
-                            }
-                            if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) >= 4) {
-                                if (baseName.equals("3af858c3-16cb-4561-91e7-f1ad2df8725f")) {
-                                    cachedAppList.add(new GBDeviceApp(UUID.fromString(baseName), "Kickstart (System)", "Pebble Inc.", "", GBDeviceApp.Type.WATCHFACE_SYSTEM));
-                                }
-                                if (baseName.equals(PebbleProtocol.UUID_WEATHER.toString())) {
-                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_WEATHER, "Weather (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
-                                }
-                            }
-                        }
+
                         if (uuids == null) {
                             cachedAppList.add(new GBDeviceApp(UUID.fromString(baseName), baseName, "N/A", "", GBDeviceApp.Type.UNKNOWN));
                         }
@@ -237,23 +211,12 @@ public abstract class AbstractAppManagerFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         mGBDevice = ((AppManagerActivity) getActivity()).getGBDevice();
 
-        if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) < 3 && !isCacheManager()) {
-            appListView.setDragEnabled(false);
-        }
-
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_REFRESH_APPLIST);
 
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mReceiver, filter);
 
-        if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) < 3) {
-            GBApplication.deviceService().onAppInfoReq();
-            if (isCacheManager()) {
-                refreshList();
-            }
-        } else {
-            refreshList();
-        }
+        refreshList();
     }
 
     @Override
@@ -305,35 +268,11 @@ public abstract class AbstractAppManagerFragment extends Fragment {
             menu.removeItem(R.id.appmanager_app_reinstall);
             menu.removeItem(R.id.appmanager_app_delete_cache);
         }
-        if (!PebbleProtocol.UUID_PEBBLE_HEALTH.equals(selectedApp.getUUID())) {
-            menu.removeItem(R.id.appmanager_health_activate);
-            menu.removeItem(R.id.appmanager_health_deactivate);
-        }
-        if (!PebbleProtocol.UUID_WORKOUT.equals(selectedApp.getUUID())) {
-            menu.removeItem(R.id.appmanager_hrm_activate);
-            menu.removeItem(R.id.appmanager_hrm_deactivate);
-        }
-        if (!PebbleProtocol.UUID_WEATHER.equals(selectedApp.getUUID())) {
-            menu.removeItem(R.id.appmanager_weather_activate);
-            menu.removeItem(R.id.appmanager_weather_deactivate);
-            menu.removeItem(R.id.appmanager_weather_install_provider);
-        }
         if (selectedApp.getType() == GBDeviceApp.Type.APP_SYSTEM || selectedApp.getType() == GBDeviceApp.Type.WATCHFACE_SYSTEM) {
             menu.removeItem(R.id.appmanager_app_delete);
         }
         if (!selectedApp.isConfigurable()) {
             menu.removeItem(R.id.appmanager_app_configure);
-        }
-
-        if (PebbleProtocol.UUID_WEATHER.equals(selectedApp.getUUID())) {
-            PackageManager pm = getActivity().getPackageManager();
-            try {
-                pm.getPackageInfo("ru.gelin.android.weather.notification", PackageManager.GET_ACTIVITIES);
-                menu.removeItem(R.id.appmanager_weather_install_provider);
-            } catch (PackageManager.NameNotFoundException e) {
-                menu.removeItem(R.id.appmanager_weather_activate);
-                menu.removeItem(R.id.appmanager_weather_deactivate);
-            }
         }
 
         switch (selectedApp.getType()) {
@@ -381,12 +320,6 @@ public abstract class AbstractAppManagerFragment extends Fragment {
                 AppManagerActivity.deleteFromAppOrderFile("pbwcacheorder.txt", selectedApp.getUUID()); // FIXME: only if successful
                 // fall through
             case R.id.appmanager_app_delete:
-                if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) >= 3) {
-                    AppManagerActivity.deleteFromAppOrderFile(mGBDevice.getAddress() + ".watchapps", selectedApp.getUUID()); // FIXME: only if successful
-                    AppManagerActivity.deleteFromAppOrderFile(mGBDevice.getAddress() + ".watchfaces", selectedApp.getUUID()); // FIXME: only if successful
-                    Intent refreshIntent = new Intent(AbstractAppManagerFragment.ACTION_REFRESH_APPLIST);
-                    LocalBroadcastManager.getInstance(getContext()).sendBroadcast(refreshIntent);
-                }
                 GBApplication.deviceService().onAppDelete(selectedApp.getUUID());
                 return true;
             case R.id.appmanager_app_reinstall:
