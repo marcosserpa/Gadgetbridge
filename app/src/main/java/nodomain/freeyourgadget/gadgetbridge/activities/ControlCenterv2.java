@@ -1,20 +1,3 @@
-/*  Copyright (C) 2016-2017 Andreas Shimokawa, Carsten Pfeiffer, Daniele
-    Gobbetti
-
-    This file is part of Gadgetbridge.
-
-    Gadgetbridge is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published
-    by the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Gadgetbridge is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 package nodomain.freeyourgadget.gadgetbridge.activities;
 
 import android.Manifest;
@@ -27,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -214,7 +196,7 @@ public class ControlCenterv2 extends AppCompatActivity
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+    public boolean onNavigationItemSelected(MenuItem item) {
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -250,6 +232,15 @@ public class ControlCenterv2 extends AppCompatActivity
 
     private void refreshPairedDevices() {
         List<GBDevice> deviceList = deviceManager.getDevices();
+        GBDevice connectedDevice = null;
+
+        for (GBDevice device : deviceList) {
+            if (device.isConnected() || device.isConnecting()) {
+                connectedDevice = device;
+                break;
+            }
+        }
+
         if (deviceList.isEmpty()) {
             background.setVisibility(View.VISIBLE);
         } else {
@@ -283,6 +274,8 @@ public class ControlCenterv2 extends AppCompatActivity
             wantedPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_DENIED)
             wantedPermissions.add(Manifest.permission.READ_CALENDAR);
+        if (ContextCompat.checkSelfPermission(this, "com.fsck.k9.permission.READ_MESSAGES") == PackageManager.PERMISSION_DENIED)
+            wantedPermissions.add("com.fsck.k9.permission.READ_MESSAGES");
 
         if (!wantedPermissions.isEmpty())
             ActivityCompat.requestPermissions(this, wantedPermissions.toArray(new String[wantedPermissions.size()]), 0);

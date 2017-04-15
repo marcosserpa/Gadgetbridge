@@ -19,9 +19,8 @@ package nodomain.freeyourgadget.gadgetbridge.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
+import android.widget.ListView;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -65,10 +64,8 @@ public class ConfigureAlarms extends GBActivity {
 
         mGBAlarmListAdapter = new GBAlarmListAdapter(this, preferencesAlarmListSet);
 
-        RecyclerView alarmsRecyclerView = (RecyclerView) findViewById(R.id.alarm_list);
-        alarmsRecyclerView.setHasFixedSize(true);
-        alarmsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        alarmsRecyclerView.setAdapter(mGBAlarmListAdapter);
+        ListView listView = (ListView) findViewById(R.id.alarm_list);
+        listView.setAdapter(mGBAlarmListAdapter);
         updateAlarmsFromPrefs();
     }
 

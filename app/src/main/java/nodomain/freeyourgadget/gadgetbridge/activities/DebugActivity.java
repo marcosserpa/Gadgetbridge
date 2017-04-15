@@ -42,6 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
@@ -73,8 +76,9 @@ public class DebugActivity extends GBActivity {
     private Button setTimeButton;
     private Button rebootButton;
     private Button HeartRateButton;
-    private Button BurnedCaloriesButton;
-    private ToggleButton HeartRateContinuousButton;
+    private ToggleButton HearRateContinuousButton;
+    private Button testNewFunctionalityButton;
+    private ScheduledExecutorService pulseScheduler;
 
     private EditText editContent;
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -100,6 +104,31 @@ public class DebugActivity extends GBActivity {
             }
         }
     };
+    private ScheduledExecutorService startActivityPulse() {
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        service.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                            pulse();
+            }
+        }, 0, getPulseIntervalMillis(), TimeUnit.MILLISECONDS);
+        return service;
+    }
+    private void stopActivityPulse() {
+        if (pulseScheduler != null) {
+            pulseScheduler.shutdownNow();
+            pulseScheduler = null;
+        }
+    }
+
+    private int getPulseIntervalMillis() {
+        return 1000;
+    }
+
+    private void pulse() {
+        // have to enable it again and again to keep it measureing
+        GBApplication.deviceService().onEnableRealtimeHeartRateMeasurement(true);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,7 +215,6 @@ public class DebugActivity extends GBActivity {
                 GBApplication.deviceService().onReboot();
             }
         });
-
         HeartRateButton = (Button) findViewById(R.id.HearRateButton);
         HeartRateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -196,25 +224,21 @@ public class DebugActivity extends GBActivity {
             }
         });
 
-        HeartRateContinuousButton = (ToggleButton) findViewById(R.id.HeartRateContinuousButton);
-        HeartRateContinuousButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        HearRateContinuousButton = (ToggleButton) findViewById(R.id.HearRateContinuousButton);
+        HearRateContinuousButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
-                    GB.toast("Start heart rate continuous, please wait...", Toast.LENGTH_LONG, GB.INFO);
+                if (isChecked) {
+                    GB.toast("Starting heart rate continuous, please wait...", Toast.LENGTH_LONG, GB.INFO);
                     GBApplication.deviceService().onEnableRealtimeHeartRateMeasurement(true);
+                    pulseScheduler = startActivityPulse();
                 } else {
                     GB.toast("Stopping heart rate continuous, please wait...", Toast.LENGTH_LONG, GB.INFO);
+                    stopActivityPulse();
                     GBApplication.deviceService().onEnableRealtimeHeartRateMeasurement(false);
                 }
             }
-        });
 
-        BurnedCaloriesButton = (Button) findViewById(R.id.BurnedCaloriesButton);
-        BurnedCaloriesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-            }
         });
 
         setMusicInfoButton = (Button) findViewById(R.id.setMusicInfoButton);
@@ -256,6 +280,14 @@ public class DebugActivity extends GBActivity {
             @Override
             public void onClick(View v) {
                 testNotification();
+            }
+        });
+
+        testNewFunctionalityButton = (Button) findViewById(R.id.testNewFunctionality);
+        testNewFunctionalityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testNewFunctionality();
             }
         });
     }

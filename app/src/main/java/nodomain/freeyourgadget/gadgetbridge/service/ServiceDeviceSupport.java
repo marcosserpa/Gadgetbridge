@@ -73,11 +73,6 @@ public class ServiceDeviceSupport implements DeviceSupport {
     }
 
     @Override
-    public boolean connectFirstTime() {
-        return delegate.connectFirstTime();
-    }
-
-    @Override
     public boolean connect() {
         return delegate.connect();
     }
@@ -115,6 +110,11 @@ public class ServiceDeviceSupport implements DeviceSupport {
     @Override
     public boolean useAutoConnect() {
         return delegate.useAutoConnect();
+    }
+
+    @Override
+    public void pair() {
+        delegate.pair();
     }
 
     private boolean checkBusy(String notificationKind) {

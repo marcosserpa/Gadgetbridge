@@ -13,12 +13,6 @@
   <string name="controlcenter_delete_device">Borrar Dispositivo</string>
   <string name="controlcenter_delete_device_name">Borrar %1$s</string>
   <string name="controlcenter_delete_device_dialogmessage">¡Esta acción borrará el dispositivo y toda su información asociada!</string>
-  <string name="controlcenter_navigation_drawer_open">Abrir el cajón de navegación</string>
-  <string name="controlcenter_navigation_drawer_close">Cerrar el cajón de navegación</string>
-  <string name="controlcenter_snackbar_need_longpress">Mantener pulsado el icono para desconectar</string>
-  <string name="controlcenter_snackbar_disconnecting">Desconectando</string>
-  <string name="controlcenter_snackbar_connecting">Conectando</string>
-  <string name="controlcenter_snackbar_requested_screenshot">Captura de pantalla del dispositivo</string>
   <string name="title_activity_debug">Depuración</string>
   <!--Strings related to AppManager-->
   <string name="title_activity_appmanager">Gestor de app</string>
@@ -84,7 +78,6 @@
   <string name="pref_title_call_privacy_mode">Modo de privacidad de llamada</string>
   <string name="pref_call_privacy_mode_off">Mostrar nombre y número</string>
   <string name="pref_call_privacy_mode_name">Ocultar nombre pero mostrar número</string>
-  <string name="pref_call_privacy_mode_number">Ocultar el número pero mostrar el nombre</string>
   <string name="pref_call_privacy_mode_complete">Ocultar nombre y número</string>
   <string name="pref_blacklist">Excluir aplicaciones</string>
   <string name="pref_header_cannned_messages">Mensajes predeterminados</string>
@@ -248,7 +241,7 @@
   <string name="notif_battery_low_bigtext_last_charge_time">Última carga: %s \n</string>
   <string name="notif_battery_low_bigtext_number_of_charges">Número de cargas: %s</string>
   <string name="sleepchart_your_sleep">Tu sueño</string>
-  <string name="weeksleepchart_sleep_a_week">Sueño esta semana</string>
+  <string name="weeksleepchart_sleep_a_week">Dormir una semana</string>
   <string name="weeksleepchart_today_sleep_description">Sueño hoy, objetivo: %1$s</string>
   <string name="weekstepschart_steps_a_week">Pasos por semana</string>
   <string name="activity_sleepchart_activity_and_sleep">Tu actividad y sueño</string>
@@ -268,8 +261,6 @@
   <string name="updatefirmwareoperation_update_complete_rebooting">Instalación del firmware completa, reiniciando dispositivo...</string>
   <string name="updatefirmwareoperation_write_failed">Falló la escritura del firmware</string>
   <string name="chart_steps">Pasos</string>
-  <string name="calories">Calorías</string>
-  <string name="distance">Distancia</string>
   <string name="liveactivity_live_activity">Actividad</string>
   <string name="weeksteps_today_steps_description">Pasos hoy, objetivo: %1$s</string>
   <string name="pref_title_dont_ack_transfer">No confirmar transferencia</string>
@@ -327,13 +318,11 @@
   <string name="activity_db_management_merge_old_title">Borrar la base de datos antigua</string>
   <string name="dbmanagementactivvity_cannot_access_export_path">No se puede acceder a la ruta para exportar . Por favor, contacta con los desarrolladores.</string>
   <string name="dbmanagementactivity_exported_to">Exportado a: %1$s</string>
-  <string name="dbmanagementactivity_error_exporting_db">Error de exportación de la base de datos: %1$s</string>
-  <string name="dbmanagementactivity_error_exporting_shared">Error de exportación de las preferencias: %1$s</string>
+  <string name="dbmanagementactivity_error_exporting_db">Error exportando DB: %1$s</string>
   <string name="dbmanagementactivity_import_data_title">¿Importar Datos?</string>
   <string name="dbmanagementactivity_overwrite_database_confirmation">¿Quiere sobreescribir la base de datos actual? Todos sus datos actuales (si los hay) se borrarán.</string>
   <string name="dbmanagementactivity_import_successful">Importado con éxito.</string>
-  <string name="dbmanagementactivity_error_importing_db">Error de importación de la base de datos: %1$s</string>
-  <string name="dbmanagementactivity_error_importing_shared">Error de importación de las preferencias: %1$s</string>
+  <string name="dbmanagementactivity_error_importing_db">Error importando DB: %1$s</string>
   <string name="dbmanagementactivity_delete_activity_data_title">¿Quieres borrar los datos de actividad?</string>
   <string name="dbmanagementactivity_really_delete_entire_db">¿Quieres borrar la base de datos? Todos tus datos de actividad y la información sobre tus dispositivos se borrarán.</string>
   <string name="dbmanagementactivity_database_successfully_deleted">Datos borrados.</string>
@@ -361,17 +350,4 @@
   <string name="StringUtils_sender">(%1$s)</string>
   <string name="find_device_you_found_it">¡Lo ha encontrado!</string>
   <string name="miband2_prefs_timeformat">Mi2: formato de hora</string>
-  <string name="mi2_fw_installhandler_fw53_hint">¡Debes instalar la versión %1$s antes de instalar este firmware!</string>
-  <string name="mi2_enable_text_notifications">Notificaciones textuales</string>
-  <string name="mi2_enable_text_notifications_summary"><![CDATA[Needs firmware >= 1.0.1.28 and Mili_pro.ft* installed.]]></string>
-  <string name="off">off</string>
-  <string name="discovery_attempting_to_pair">Intento de emparejamiento con %1$s</string>
-  <string name="discovery_bonding_failed_immediately">El enlace con %1$s falló instantáneamente</string>
-  <string name="discovery_trying_to_connect_to">Intentando conectar con: %1$s</string>
-  <string name="discovery_enable_bluetooth">Activa el Bluetooth para encontrar dispositivos.</string>
-  <string name="discovery_successfully_bonded">Correctamente conectado con %1$s</string>
-  <string name="discovery_pair_title">Emparejar con %1$s?</string>
-  <string name="discovery_pair_question">Selecciona Emparejar para emparejar tus dispositivos. Si esto falla, prueba de nuevo sin emparejar.</string>
-  <string name="discovery_yes_pair">Emparejar</string>
-  <string name="discovery_dont_pair">No emparejar</string>
 </resources>

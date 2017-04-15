@@ -37,24 +37,13 @@ public class LanguageUtilsTest extends TestBase {
 
     @Test
     public void testTransliterateOption() throws Exception {
-        setDefaultTransliteration();
         assertFalse("Transliteration option fail! Expected 'Off' by default, but result is 'On'", LanguageUtils.transliterate());
 
-        enableTransliteration(true);
+        SharedPreferences settings = GBApplication.getPrefs().getPreferences();
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("transliteration", true);
+        editor.apply();
+
         assertTrue("Transliteration option fail! Expected 'On', but result is 'Off'", LanguageUtils.transliterate());
-    }
-
-    private void setDefaultTransliteration() {
-        SharedPreferences settings = GBApplication.getPrefs().getPreferences();
-        SharedPreferences.Editor editor = settings.edit();
-        editor.remove("transliteration");
-        editor.apply();
-    }
-
-    private void enableTransliteration(boolean enable) {
-        SharedPreferences settings = GBApplication.getPrefs().getPreferences();
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putBoolean("transliteration", enable);
-        editor.apply();
     }
 }

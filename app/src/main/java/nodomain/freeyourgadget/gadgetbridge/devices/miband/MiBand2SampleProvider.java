@@ -20,6 +20,7 @@ package nodomain.freeyourgadget.gadgetbridge.devices.miband;
 import java.util.List;
 
 import de.greenrobot.dao.query.QueryBuilder;
+import nodomain.freeyourgadget.gadgetbridge.devices.SampleProvider;
 import nodomain.freeyourgadget.gadgetbridge.entities.DaoSession;
 import nodomain.freeyourgadget.gadgetbridge.entities.MiBandActivitySample;
 import nodomain.freeyourgadget.gadgetbridge.entities.MiBandActivitySampleDao;
@@ -61,6 +62,12 @@ public class MiBand2SampleProvider extends AbstractMiBandSampleProvider {
     public MiBand2SampleProvider(GBDevice device, DaoSession session) {
         super(device, session);
     }
+
+    @Override
+    public int getID() {
+        return SampleProvider.PROVIDER_MIBAND2;
+    }
+
 
     @Override
     protected List<MiBandActivitySample> getGBActivitySamples(int timestamp_from, int timestamp_to, int activityType) {

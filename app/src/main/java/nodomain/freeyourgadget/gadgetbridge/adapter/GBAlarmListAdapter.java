@@ -19,21 +19,20 @@ package nodomain.freeyourgadget.gadgetbridge.adapter;
 
 
 import android.content.Context;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.RecyclerView;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckedTextView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
+import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.activities.ConfigureAlarms;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBAlarm;
@@ -42,18 +41,22 @@ import nodomain.freeyourgadget.gadgetbridge.model.Alarm;
 /**
  * Adapter for displaying GBAlarm instances.
  */
-public class GBAlarmListAdapter extends RecyclerView.Adapter<GBAlarmListAdapter.ViewHolder> {
+public class GBAlarmListAdapter extends ArrayAdapter<GBAlarm> {
 
 
     private final Context mContext;
-    private List<GBAlarm> alarmList;
+    private ArrayList<GBAlarm> alarmList;
 
-    public GBAlarmListAdapter(Context context, List<GBAlarm> alarmList) {
+    public GBAlarmListAdapter(Context context, ArrayList<GBAlarm> alarmList) {
+        super(context, 0, alarmList);
+
         this.mContext = context;
         this.alarmList = alarmList;
     }
 
     public GBAlarmListAdapter(Context context, Set<String> preferencesAlarmListSet) {
+        super(context, 0, new ArrayList<GBAlarm>());
+
         this.mContext = context;
         alarmList = new ArrayList<>();
 
@@ -78,7 +81,7 @@ public class GBAlarmListAdapter extends RecyclerView.Adapter<GBAlarmListAdapter.
     }
 
     public ArrayList<? extends Alarm> getAlarmList() {
-        return (ArrayList) alarmList;
+        return alarmList;
     }
 
 
@@ -92,26 +95,53 @@ public class GBAlarmListAdapter extends RecyclerView.Adapter<GBAlarmListAdapter.
     }
 
     @Override
-    public GBAlarmListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_alarm, parent, false);
-        ViewHolder vh = new ViewHolder(view);
-        return vh;
+    public int getCount() {
+        if (alarmList != null) {
+            return alarmList.size();
+        }
+        return 0;
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public GBAlarm getItem(int position) {
+        if (alarmList != null) {
+            return alarmList.get(position);
+        }
+        return null;
+    }
 
-        final GBAlarm alarm = alarmList.get(position);
+    @Override
+    public long getItemId(int position) {
+        if (alarmList != null) {
+            return alarmList.get(position).getIndex();
+        }
+        return 0;
+    }
 
-        holder.alarmDayMonday.setChecked(alarm.getRepetition(Alarm.ALARM_MON));
-        holder.alarmDayTuesday.setChecked(alarm.getRepetition(Alarm.ALARM_TUE));
-        holder.alarmDayWednesday.setChecked(alarm.getRepetition(Alarm.ALARM_WED));
-        holder.alarmDayThursday.setChecked(alarm.getRepetition(Alarm.ALARM_THU));
-        holder.alarmDayFriday.setChecked(alarm.getRepetition(Alarm.ALARM_FRI));
-        holder.alarmDaySaturday.setChecked(alarm.getRepetition(Alarm.ALARM_SAT));
-        holder.alarmDaySunday.setChecked(alarm.getRepetition(Alarm.ALARM_SUN));
+    @Override
+    public View getView(int position, View view, ViewGroup parent) {
 
-        holder.isEnabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        final GBAlarm alarm = getItem(position);
+
+        if (view == null) {
+            LayoutInflater inflater = (LayoutInflater) mContext
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            view = inflater.inflate(R.layout.alarm_item, parent, false);
+        }
+
+        TextView alarmTime = (TextView) view.findViewById(R.id.alarm_item_time);
+        Switch isEnabled = (Switch) view.findViewById(R.id.alarm_item_toggle);
+        TextView isSmartWakeup = (TextView) view.findViewById(R.id.alarm_smart_wakeup);
+
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_sunday), alarm.getRepetition(Alarm.ALARM_SUN));
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_monday), alarm.getRepetition(Alarm.ALARM_MON));
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_tuesday), alarm.getRepetition(Alarm.ALARM_TUE));
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_wednesday), alarm.getRepetition(Alarm.ALARM_WED));
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_thursday), alarm.getRepetition(Alarm.ALARM_THU));
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_friday), alarm.getRepetition(Alarm.ALARM_FRI));
+        highlightDay((TextView) view.findViewById(R.id.alarm_item_saturday), alarm.getRepetition(Alarm.ALARM_SAT));
+
+        isEnabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 alarm.setEnabled(isChecked);
@@ -119,62 +149,28 @@ public class GBAlarmListAdapter extends RecyclerView.Adapter<GBAlarmListAdapter.
             }
         });
 
-        holder.container.setOnClickListener(new View.OnClickListener() {
+        view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ((ConfigureAlarms) mContext).configureAlarm(alarm);
             }
         });
-        holder.alarmTime.setText(alarm.getTime());
-        holder.isEnabled.setChecked(alarm.isEnabled());
+        alarmTime.setText(alarm.getTime());
+        isEnabled.setChecked(alarm.isEnabled());
         if (alarm.isSmartWakeup()) {
-            holder.isSmartWakeup.setVisibility(TextView.VISIBLE);
+            isSmartWakeup.setVisibility(TextView.VISIBLE);
         } else {
-            holder.isSmartWakeup.setVisibility(TextView.GONE);
+            isSmartWakeup.setVisibility(TextView.GONE);
+        }
+
+        return view;
+    }
+
+    private void highlightDay(TextView view, boolean isOn) {
+        if (isOn) {
+            view.setTextColor(Color.BLUE);
+        } else {
+            view.setTextColor(GBApplication.getTextColor(mContext));
         }
     }
-
-
-    @Override
-    public int getItemCount() {
-        return alarmList.size();
-    }
-
-    static class ViewHolder extends RecyclerView.ViewHolder {
-
-        CardView container;
-
-        TextView alarmTime;
-        Switch isEnabled;
-        TextView isSmartWakeup;
-
-        CheckedTextView alarmDayMonday;
-        CheckedTextView alarmDayTuesday;
-        CheckedTextView alarmDayWednesday;
-        CheckedTextView alarmDayThursday;
-        CheckedTextView alarmDayFriday;
-        CheckedTextView alarmDaySaturday;
-        CheckedTextView alarmDaySunday;
-
-        ViewHolder(View view) {
-            super(view);
-
-            container = (CardView) view.findViewById(R.id.card_view);
-
-            alarmTime = (TextView) view.findViewById(R.id.alarm_item_time);
-            isEnabled = (Switch) view.findViewById(R.id.alarm_item_toggle);
-            isSmartWakeup = (TextView) view.findViewById(R.id.alarm_smart_wakeup);
-
-            alarmDayMonday = (CheckedTextView) view.findViewById(R.id.alarm_item_monday);
-            alarmDayTuesday = (CheckedTextView) view.findViewById(R.id.alarm_item_tuesday);
-            alarmDayWednesday = (CheckedTextView) view.findViewById(R.id.alarm_item_wednesday);
-            alarmDayThursday = (CheckedTextView) view.findViewById(R.id.alarm_item_thursday);
-            alarmDayFriday = (CheckedTextView) view.findViewById(R.id.alarm_item_friday);
-            alarmDaySaturday = (CheckedTextView) view.findViewById(R.id.alarm_item_saturday);
-            alarmDaySunday = (CheckedTextView) view.findViewById(R.id.alarm_item_sunday);
-
-
-        }
-    }
-
 }

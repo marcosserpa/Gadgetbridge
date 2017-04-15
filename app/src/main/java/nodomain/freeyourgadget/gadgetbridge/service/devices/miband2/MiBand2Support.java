@@ -42,7 +42,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
-import nodomain.freeyourgadget.gadgetbridge.Logging;
 import nodomain.freeyourgadget.gadgetbridge.R;
 import nodomain.freeyourgadget.gadgetbridge.database.DBHandler;
 import nodomain.freeyourgadget.gadgetbridge.database.DBHelper;
@@ -97,7 +96,6 @@ import nodomain.freeyourgadget.gadgetbridge.service.devices.miband2.operations.U
 import nodomain.freeyourgadget.gadgetbridge.util.GB;
 import nodomain.freeyourgadget.gadgetbridge.util.NotificationUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.Prefs;
-import nodomain.freeyourgadget.gadgetbridge.util.Version;
 
 import static nodomain.freeyourgadget.gadgetbridge.devices.miband.MiBandConst.DEFAULT_VALUE_FLASH_COLOUR;
 import static nodomain.freeyourgadget.gadgetbridge.devices.miband.MiBandConst.DEFAULT_VALUE_FLASH_COUNT;
@@ -267,9 +265,13 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
     }
 
     @Override
-    public boolean connectFirstTime() {
+    public void pair() {
         needsAuth = true;
-        return super.connect();
+        for (int i = 0; i < 5; i++) {
+            if (connect()) {
+                return;
+            }
+        }
     }
 
     private MiBand2Support sendDefaultNotification(TransactionBuilder builder, SimpleNotification simpleNotification, short repeat, BtLEAction extraAction) {
@@ -299,16 +301,6 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
     }
 
     private NotificationStrategy getNotificationStrategy() {
-        String firmwareVersion = getDevice().getFirmwareVersion();
-        if (firmwareVersion != null) {
-            Version ver = new Version(firmwareVersion);
-            if (MiBandConst.MI2_FW_VERSION_MIN_TEXT_NOTIFICATIONS.compareTo(ver) > 0) {
-                return new Mi2NotificationStrategy(this);
-            }
-        }
-        if (GBApplication.getPrefs().getBoolean(MiBandConst.PREF_MI2_ENABLE_TEXT_NOTIFICATIONS, true)) {
-            return new Mi2TextNotificationStrategy(this);
-        }
         return new Mi2NotificationStrategy(this);
     }
 
@@ -448,7 +440,6 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
             int flashDuration = getPreferredFlashDuration(notificationOrigin, prefs);
 
             sendCustomNotification(profile, simpleNotification, flashTimes, flashColour, originalColour, flashDuration, extraAction, builder);
-
 //            sendCustomNotification(vibrateDuration, vibrateTimes, vibratePause, flashTimes, flashColour, originalColour, flashDuration, builder);
             builder.queue(getQueue());
         } catch (IOException ex) {
@@ -572,17 +563,6 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
             performPreferredNotification("incoming call", MiBandConst.ORIGIN_INCOMING_CALL, simpleNotification, MiBand2Service.ALERT_LEVEL_PHONE_CALL, abortAction);
         } else if ((callSpec.command == CallSpec.CALL_START) || (callSpec.command == CallSpec.CALL_END)) {
             telephoneRinging = false;
-            stopCurrentNotification();
-        }
-    }
-
-    private void stopCurrentNotification() {
-        try {
-            TransactionBuilder builder = performInitialized("stop notification");
-            getNotificationStrategy().stopCurrentNotification(builder);
-            builder.queue(getQueue());
-        } catch (IOException e) {
-            LOG.error("Error stopping notification");
         }
     }
 
@@ -662,7 +642,7 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
                     return !isLocatingDevice;
                 }
             };
-            SimpleNotification simpleNotification = new SimpleNotification(getContext().getString(R.string.find_device_you_found_it), AlertCategory.HighPriorityAlert);
+            SimpleNotification simpleNotification = new SimpleNotification(getContext().getString(R.string.find_device_you_found_it), AlertCategory.HighPriorityAlert.HighPriorityAlert);
             performDefaultNotification("locating device", simpleNotification, (short) 255, abortAction);
         }
     }
@@ -683,17 +663,6 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
 
     @Override
     public void onEnableRealtimeSteps(boolean enable) {
-        try {
-            TransactionBuilder builder = performInitialized(enable ? "Enabling realtime steps notifications" : "Disabling realtime steps notifications");
-            if (enable) {
-                builder.read(getCharacteristic(MiBand2Service.UUID_CHARACTERISTIC_7_REALTIME_STEPS));
-            }
-            builder.notify(getCharacteristic(MiBand2Service.UUID_CHARACTERISTIC_7_REALTIME_STEPS), enable);
-            builder.queue(getQueue());
-            enableRealtimeSamplesTimer(enable);
-        } catch (IOException e) {
-            LOG.error("Unable to change realtime steps notification to: " + enable, e);
-        }
     }
 
     private byte[] getHighLatency() {
@@ -788,15 +757,15 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
         } else if (GattCharacteristic.UUID_CHARACTERISTIC_HEART_RATE_MEASUREMENT.equals(characteristicUUID)) {
             handleHeartrate(characteristic.getValue());
             return true;
+//        } else if (MiBand2Service.UUID_UNKNOQN_CHARACTERISTIC0.equals(characteristicUUID)) {
+//            handleUnknownCharacteristic(characteristic.getValue());
+//            return true;
         } else if (MiBand2Service.UUID_CHARACTERISTIC_AUTH.equals(characteristicUUID)) {
             LOG.info("AUTHENTICATION?? " + characteristicUUID);
             logMessageContent(characteristic.getValue());
             return true;
         } else if (MiBand2Service.UUID_CHARACTERISTIC_10_BUTTON.equals(characteristicUUID)) {
             handleButtonPressed(characteristic.getValue());
-            return true;
-        } else if (MiBand2Service.UUID_CHARACTERISTIC_7_REALTIME_STEPS.equals(characteristicUUID)) {
-            handleRealtimeSteps(characteristic.getValue());
             return true;
         } else {
             LOG.info("Unhandled characteristic changed: " + characteristicUUID);
@@ -806,7 +775,7 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
     }
 
     private void handleButtonPressed(byte[] value) {
-        LOG.info("Button pressed");
+        LOG.info("Button pressed: " + value);
         logMessageContent(value);
     }
 
@@ -828,9 +797,6 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
             return true;
         } else if (GattCharacteristic.UUID_CHARACTERISTIC_HEART_RATE_MEASUREMENT.equals(characteristicUUID)) {
             logHeartrate(characteristic.getValue(), status);
-            return true;
-        } else if (MiBand2Service.UUID_CHARACTERISTIC_7_REALTIME_STEPS.equals(characteristicUUID)) {
-            handleRealtimeSteps(characteristic.getValue());
             return true;
         } else if (MiBand2Service.UUID_CHARACTERISTIC_10_BUTTON.equals(characteristicUUID)) {
             handleButtonPressed(characteristic.getValue());
@@ -882,21 +848,11 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
     }
 
     private void handleRealtimeSteps(byte[] value) {
-        if (value == null) {
-            LOG.error("realtime steps: value is null");
-            return;
+        int steps = 0xff & value[0] | (0xff & value[1]) << 8;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("realtime steps: " + steps);
         }
-
-        if (value.length == 13) {
-            byte[] stepsValue = new byte[] {value[1], value[2]};
-            int steps = BLETypeConversions.toUint16(stepsValue);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("realtime steps: " + steps);
-            }
-            getRealtimeSamplesSupport().setSteps(steps);
-        } else {
-            LOG.warn("Unrecognized realtime steps value: " + Logging.formatBytes(value));
-        }
+        getRealtimeSamplesSupport().setSteps(steps);
     }
 
     private void enableRealtimeSamplesTimer(boolean enable) {
@@ -1018,9 +974,6 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
         versionCmd.hwVersion = info.getHardwareRevision();
 //        versionCmd.fwVersion = info.getFirmwareRevision(); // always null
         versionCmd.fwVersion = info.getSoftwareRevision();
-        if (versionCmd.fwVersion != null && versionCmd.fwVersion.length() > 0 && versionCmd.fwVersion.charAt(0) == 'V') {
-            versionCmd.fwVersion = versionCmd.fwVersion.substring(1);
-        }
         handleGBDeviceEvent(versionCmd);
     }
 
@@ -1091,10 +1044,11 @@ public class MiBand2Support extends AbstractBTLEDeviceSupport {
     @Override
     public void onTestNewFunction() {
         try {
-            TransactionBuilder builder = performInitialized("test realtime steps");
-            builder.read(getCharacteristic(MiBand2Service.UUID_CHARACTERISTIC_7_REALTIME_STEPS));
-            builder.queue(getQueue());
+            performInitialized("read characteristic 10")
+                    .read(getCharacteristic(MiBand2Service.UUID_CHARACTERISTIC_10_BUTTON))
+                    .queue(getQueue());
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

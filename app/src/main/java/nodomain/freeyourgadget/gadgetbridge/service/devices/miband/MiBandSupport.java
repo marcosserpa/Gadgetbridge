@@ -22,7 +22,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
@@ -217,13 +216,12 @@ public class MiBandSupport extends AbstractBTLEDeviceSupport {
     }
 
     @Override
-    public boolean connectFirstTime() {
+    public void pair() {
         for (int i = 0; i < 5; i++) {
             if (connect()) {
-                return true;
+                return;
             }
         }
-        return false;
     }
 
     public DeviceInfo getDeviceInfo() {
@@ -250,7 +248,7 @@ public class MiBandSupport extends AbstractBTLEDeviceSupport {
      * @param extraAction      an extra action to be executed after every vibration and flash sequence. Allows to abort the repetition, for example.
      * @param builder
      */
-    private MiBandSupport sendCustomNotification(VibrationProfile vibrationProfile, @Nullable SimpleNotification simpleNotification, int flashTimes, int flashColour, int originalColour, long flashDuration, BtLEAction extraAction, TransactionBuilder builder) {
+    private MiBandSupport sendCustomNotification(VibrationProfile vibrationProfile, SimpleNotification simpleNotification, int flashTimes, int flashColour, int originalColour, long flashDuration, BtLEAction extraAction, TransactionBuilder builder) {
         getNotificationStrategy().sendCustomNotification(vibrationProfile, simpleNotification, flashTimes, flashColour, originalColour, flashDuration, extraAction, builder);
         LOG.info("Sending notification to MiBand");
         return this;
@@ -489,7 +487,7 @@ public class MiBandSupport extends AbstractBTLEDeviceSupport {
         }
     }
 
-    private void performPreferredNotification(String task, @Nullable SimpleNotification simpleNotification, String notificationOrigin, BtLEAction extraAction) {
+    private void performPreferredNotification(String task, SimpleNotification simpleNotification, String notificationOrigin, BtLEAction extraAction) {
         try {
             TransactionBuilder builder = performInitialized(task);
             Prefs prefs = GBApplication.getPrefs();
@@ -574,8 +572,11 @@ public class MiBandSupport extends AbstractBTLEDeviceSupport {
             return;
         }
 
+        String message = NotificationUtils.getPreferredTextFor(notificationSpec, 40, 40, getContext()).trim();
+        SimpleNotification simpleNotification = new SimpleNotification(message, BLETypeConversions.toAlertCategory(notificationSpec.type));
+
         String origin = notificationSpec.type.getGenericType();
-        performPreferredNotification(origin + " received", null, origin, null);
+        performPreferredNotification(origin + " received", simpleNotification, origin, null);
     }
 
     private void onAlarmClock(NotificationSpec notificationSpec) {
@@ -967,7 +968,7 @@ public class MiBandSupport extends AbstractBTLEDeviceSupport {
     }
 
     private void handleRealtimeSteps(byte[] value) {
-        int steps = BLETypeConversions.toUint16(value);
+        int steps = 0xff & value[0] | (0xff & value[1]) << 8;
         if (LOG.isDebugEnabled()) {
             LOG.debug("realtime steps: " + steps);
         }

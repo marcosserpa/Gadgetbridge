@@ -265,7 +265,7 @@ public class NotificationListener extends NotificationListenerService {
 
         notificationSpec.type = AppNotificationType.getInstance().get(source);
 
-        if (source.startsWith("com.fsck.k9")) {
+        if (source.equals("com.fsck.k9")) {
             // we dont want group summaries at all for k9
             if ((notification.flags & Notification.FLAG_GROUP_SUMMARY) == Notification.FLAG_GROUP_SUMMARY) {
                 return;
@@ -417,10 +417,6 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         //FIXME: deduplicate code
-        if (!isServiceRunning() || sbn == null) {
-            return;
-        }
-
         String source = sbn.getPackageName();
         Notification notification = sbn.getNotification();
         if ((notification.flags & Notification.FLAG_ONGOING_EVENT) == Notification.FLAG_ONGOING_EVENT) {

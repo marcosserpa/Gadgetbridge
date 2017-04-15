@@ -105,10 +105,6 @@ public class SleepChartFragment extends AbstractChartFragment {
             }
         });
         set.setColors(colors);
-        set.setValueTextColor(DESCRIPTION_COLOR);
-        set.setValueTextSize(13f);
-        set.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-        set.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
         data.setDataSet(set);
 
         //setupLegend(pieChart);
@@ -166,7 +162,6 @@ public class SleepChartFragment extends AbstractChartFragment {
     private void setupSleepAmountChart() {
         mSleepAmountChart.setBackgroundColor(BACKGROUND_COLOR);
         mSleepAmountChart.getDescription().setTextColor(DESCRIPTION_COLOR);
-        mSleepAmountChart.setEntryLabelColor(DESCRIPTION_COLOR);
         mSleepAmountChart.getDescription().setText("");
 //        mSleepAmountChart.getDescription().setNoDataTextDescription("");
         mSleepAmountChart.setNoDataText("");

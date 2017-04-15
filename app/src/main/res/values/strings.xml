@@ -99,9 +99,7 @@
     <string name="pref_title_call_privacy_mode">Call Privacy Mode</string>
     <string name="pref_call_privacy_mode_off">Display name and number</string>
     <string name="pref_call_privacy_mode_name">Hide name but display number</string>
-    <string name="pref_call_privacy_mode_number">Hide number but display name</string>
     <string name="pref_call_privacy_mode_complete">Hide name and number</string>
-
 
     <string name="pref_blacklist">Blacklist Apps</string>
 
@@ -306,8 +304,6 @@
     <string name="updatefirmwareoperation_update_complete_rebooting">Firmware installation complete, rebooting device…</string>
     <string name="updatefirmwareoperation_write_failed">Firmware write failed</string>
     <string name="chart_steps">Steps</string>
-    <string name="calories">Calories</string>
-    <string name="distance">Distance</string>
     <string name="liveactivity_live_activity">Live Activity</string>
     <string name="weeksteps_today_steps_description">Steps today, target: %1$s</string>
     <string name="pref_title_dont_ack_transfer">Do not ack activity data transfer</string>
@@ -372,12 +368,10 @@
     <string name="dbmanagementactivvity_cannot_access_export_path">Cannot access export path. Please contact the developers.</string>
     <string name="dbmanagementactivity_exported_to">Exported to: %1$s</string>
     <string name="dbmanagementactivity_error_exporting_db">"Error exporting DB: %1$s"</string>
-    <string name="dbmanagementactivity_error_exporting_shared">"Error exporting preference: %1$s"</string>
     <string name="dbmanagementactivity_import_data_title">Import Data?</string>
     <string name="dbmanagementactivity_overwrite_database_confirmation">Really overwrite the current database? All your current activity data (if any) will be lost.</string>
     <string name="dbmanagementactivity_import_successful">Import successful.</string>
     <string name="dbmanagementactivity_error_importing_db">"Error importing DB: %1$s"</string>
-    <string name="dbmanagementactivity_error_importing_shared">"Error importing preference: %1$s"</string>
     <string name="dbmanagementactivity_delete_activity_data_title">Delete Activity Data?</string>
     <string name="dbmanagementactivity_really_delete_entire_db">Really delete the entire database? All your activity data and information about your devices will be lost.</string>
     <string name="dbmanagementactivity_database_successfully_deleted">Data successfully deleted.</string>
@@ -410,17 +404,4 @@
     <string name="StringUtils_sender"> (%1$s)</string>
     <string name="find_device_you_found_it">You found it!</string>
     <string name="miband2_prefs_timeformat">Mi2: Time Format</string>
-    <string name="mi2_fw_installhandler_fw53_hint">You need to install version %1$s before installing this firmware!</string>
-    <string name="mi2_enable_text_notifications">Text notifications</string>
-    <string name="mi2_enable_text_notifications_summary"><![CDATA[Needs firmware >= 1.0.1.28 and Mili_pro.ft* installed.]]></string>
-    <string name="off">off</string>
-    <string name="discovery_attempting_to_pair">Attempting to pair with %1$s</string>
-    <string name="discovery_bonding_failed_immediately">Bonding with %1$s failed immediately.</string>
-    <string name="discovery_trying_to_connect_to">Trying to connect to: %1$s</string>
-    <string name="discovery_enable_bluetooth">Enable Bluetooth to discover devices.</string>
-    <string name="discovery_successfully_bonded">Successfully bonded with %1$s.</string>
-    <string name="discovery_pair_title">Pair with %1$s?</string>
-    <string name="discovery_pair_question">Select Pair to pair your devices. If this fails, try again without pairing.</string>
-    <string name="discovery_yes_pair">Pair</string>
-    <string name="discovery_dont_pair">Don\'t Pair</string>
 </resources>

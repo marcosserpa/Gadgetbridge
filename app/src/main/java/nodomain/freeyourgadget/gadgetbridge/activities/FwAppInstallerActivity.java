@@ -225,11 +225,6 @@ public class FwAppInstallerActivity extends GBActivity implements InstallActivit
     }
 
     @Override
-    public CharSequence getInfoText() {
-        return fwAppInstallTextView.getText();
-    }
-
-    @Override
     public void setInstallEnabled(boolean enable) {
         boolean enabled = device != null && device.isConnected() && enable;
         installButton.setEnabled(enabled);

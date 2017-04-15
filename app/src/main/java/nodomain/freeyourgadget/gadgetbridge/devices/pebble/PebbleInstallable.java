@@ -1,4 +1,4 @@
-/*  Copyright (C) 2017 Carsten Pfeiffer
+/*  Copyright (C) 2015-2017 Andreas Shimokawa, Carsten Pfeiffer
 
     This file is part of Gadgetbridge.
 
@@ -14,27 +14,34 @@
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-package nodomain.freeyourgadget.gadgetbridge.service.btle.profiles.alertnotification;
+package nodomain.freeyourgadget.gadgetbridge.devices.pebble;
 
-/**
- * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.alert_notification_control_point.xml
- */
-public enum Command {
-    EnableNewIncomingAlertNotification(0),
-    EnableUnreadCategoryStatusNotification(1),
-    DisableNewIncomingAlertNotification(2),
-    DisbleUnreadCategoryStatusNotification(3),
-    NotifyNewIncomingAlertImmediately(4),
-    NotifyUnreadCategoryStatusImmediately(5),;
-    // 6-255 reserved for future use
+public class PebbleInstallable {
+    final private byte type;
+    final private int crc;
+    final private String fileName;
+    final private int fileSize;
 
-    private final int id;
-
-    Command(int id) {
-        this.id = id;
+    public PebbleInstallable(String fileName, int fileSize, int crc, byte type) {
+        this.fileName = fileName;
+        this.fileSize = fileSize;
+        this.crc = crc;
+        this.type = type;
     }
 
-    public int getId() {
-        return id;
+    public String getFileName() {
+        return fileName;
+    }
+
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    public byte getType() {
+        return type;
+    }
+
+    public int getCRC() {
+        return crc;
     }
 }

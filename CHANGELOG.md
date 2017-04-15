@@ -1,48 +1,15 @@
 ###Changelog
 
-###Version 0.18.5
-* Applied some material design guidelines to Charts and (pebble) app management
-* Changed colours: deep sleep is now dark blue, light sleep is now light blue
-* Support for exporting and importing of preferences in addition to the database
-* Visual improvements of the pie charts
-* Add filter by name in the App blacklist activity
-* Pebble: improve compatibility with watch app configuration pages
-* Pebble: display battery percentage (will only update once an hour)
-* HPlus: users can now decide whether they want to pair the device or not, hopefully fixing some connection problems (#642)
-* HPlus: display battery state and warn on low battery
-
-###Version 0.18.4
-* Mi Band 2: Display realtime steps in Live Activity
-* Mi Band: Attempt to recognize Mi Band model with hwVersion = 8
-* Alarms activity improvements and fixes
-* Make Buttons in the main activity easier to hit
-
-###Version 0.18.3
-* Fix bug that caused the same value in weekly charts for every day on Android 6 and older
-
-###Version 0.18.2
-* Mi Band 2: Fix crash on "chat" or "social network" text notification (#603)
-
-###Version 0.18.1
-* Pebble: Fix Firmware insstallation on Pebble Time Round (broken since 0.16.0)
-* Start VibrationActivity when using "find device" button with Vibratissimo
-* Support material fork of K9
-
 ###Version 0.18.0
 * All new GUI for the control center
 * Add Portuguese pt_PT and pt_BR translations
 * Add Czech translation
 * Add Hebrew translation and transliteration
 * Consistently display device specific icons already during discovery
-* Add sleep chart displaying the last week of sleep
+* Add sleep chart diplaying the last week of sleep
 * Huge speedup for weekly charts when changing days
-* Drop support for importing pre Gadgetbridge 0.12.0 database
-* Pebble: allow configuration web pages (clay) to access device location
-* Mi Band 2: Initial support for text notifications, caller ID, and icons (requires font installation) (#560)
-* Mi Band 2: Support for flashing Mili_pro.ft* font files
-* Mi Band 2: Improved firmware/font updated
-* Mi Band 2: Set 12h/24h time format, following the Android configuration (#573)
-* Improved BLE discovery and connectivity
+* Drop support for pre Gadgetbride 0.12.0 database
+* Pebble: allow configuration webpages (clay) to access device location
 
 ####Version 0.17.5
 * Automatically start the service on boot (can be turned off)

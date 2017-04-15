@@ -24,18 +24,18 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+
+import com.woxthebox.draglistview.DragListView;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -54,6 +54,7 @@ import nodomain.freeyourgadget.gadgetbridge.adapter.GBDeviceAppAdapter;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDeviceApp;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceService;
+import nodomain.freeyourgadget.gadgetbridge.service.devices.pebble.PebbleProtocol;
 import nodomain.freeyourgadget.gadgetbridge.util.FileUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.PebbleUtils;
 
@@ -63,8 +64,6 @@ public abstract class AbstractAppManagerFragment extends Fragment {
             = "nodomain.freeyourgadget.gadgetbridge.appmanager.action.refresh_applist";
     private static final Logger LOG = LoggerFactory.getLogger(AbstractAppManagerFragment.class);
 
-    private ItemTouchHelper appManagementTouchHelper;
-
     protected abstract List<GBDeviceApp> getSystemAppsInCategory();
 
     protected abstract String getSortFilename();
@@ -73,13 +72,9 @@ public abstract class AbstractAppManagerFragment extends Fragment {
 
     protected abstract boolean filterApp(GBDeviceApp gbDeviceApp);
 
-    public void startDragging(RecyclerView.ViewHolder viewHolder) {
-        appManagementTouchHelper.startDrag(viewHolder);
-    }
-
     protected void onChangedAppOrder() {
         List<UUID> uuidList = new ArrayList<>();
-        for (GBDeviceApp gbDeviceApp : mGBDeviceAppAdapter.getAppList()) {
+        for (GBDeviceApp gbDeviceApp : mGBDeviceAppAdapter.getItemList()) {
             uuidList.add(gbDeviceApp.getUUID());
         }
         AppManagerActivity.rewriteAppOrderFile(getSortFilename(), uuidList);
@@ -138,6 +133,7 @@ public abstract class AbstractAppManagerFragment extends Fragment {
         }
     };
 
+    private DragListView appListView;
     protected final List<GBDeviceApp> appList = new ArrayList<>();
     private GBDeviceAppAdapter mGBDeviceAppAdapter;
     protected GBDevice mGBDevice = null;
@@ -204,6 +200,28 @@ public abstract class AbstractAppManagerFragment extends Fragment {
                             cachedAppList.add(new GBDeviceApp(UUID.fromString("cf1e816a-9db0-4511-bbb8-f60c48ca8fac"), "Golf (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
                         }
                         */
+                        if (mGBDevice != null) {
+                            if (PebbleUtils.hasHealth(mGBDevice.getModel())) {
+                                if (baseName.equals(PebbleProtocol.UUID_PEBBLE_HEALTH.toString())) {
+                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_PEBBLE_HEALTH, "Health (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
+                                    continue;
+                                }
+                            }
+                            if (PebbleUtils.hasHRM(mGBDevice.getModel())) {
+                                if (baseName.equals(PebbleProtocol.UUID_WORKOUT.toString())) {
+                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_WORKOUT, "Workout (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
+                                    continue;
+                                }
+                            }
+                            if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) >= 4) {
+                                if (baseName.equals("3af858c3-16cb-4561-91e7-f1ad2df8725f")) {
+                                    cachedAppList.add(new GBDeviceApp(UUID.fromString(baseName), "Kickstart (System)", "Pebble Inc.", "", GBDeviceApp.Type.WATCHFACE_SYSTEM));
+                                }
+                                if (baseName.equals(PebbleProtocol.UUID_WEATHER.toString())) {
+                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_WEATHER, "Weather (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
+                                }
+                            }
+                        }
                         if (uuids == null) {
                             cachedAppList.add(new GBDeviceApp(UUID.fromString(baseName), baseName, "N/A", "", GBDeviceApp.Type.UNKNOWN));
                         }
@@ -218,6 +236,10 @@ public abstract class AbstractAppManagerFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mGBDevice = ((AppManagerActivity) getActivity()).getGBDevice();
+
+        if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) < 3 && !isCacheManager()) {
+            appListView.setDragEnabled(false);
+        }
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_REFRESH_APPLIST);
@@ -237,35 +259,33 @@ public abstract class AbstractAppManagerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final FloatingActionButton appListFab = ((FloatingActionButton) getActivity().findViewById(R.id.fab));
         View rootView = inflater.inflate(R.layout.activity_appmanager, container, false);
 
-        RecyclerView appListView = (RecyclerView) (rootView.findViewById(R.id.appListView));
-
-        appListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        appListView = (DragListView) (rootView.findViewById(R.id.appListView));
+        appListView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mGBDeviceAppAdapter = new GBDeviceAppAdapter(appList, R.layout.item_with_details, R.id.item_image, this.getContext(), this);
+        appListView.setAdapter(mGBDeviceAppAdapter, false);
+        appListView.setCanDragHorizontally(false);
+        appListView.setDragListListener(new DragListView.DragListListener() {
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (dy > 0) {
-                    appListFab.hide();
-                } else if (dy < 0) {
-                    appListFab.show();
-                }
+            public void onItemDragStarted(int position) {
+            }
+
+            @Override
+            public void onItemDragging(int itemPosition, float x, float y) {
+            }
+
+            @Override
+            public void onItemDragEnded(int fromPosition, int toPosition) {
+                onChangedAppOrder();
             }
         });
-        appListView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mGBDeviceAppAdapter = new GBDeviceAppAdapter(appList, R.layout.item_pebble_watchapp, this);
-        appListView.setAdapter(mGBDeviceAppAdapter);
-
-        ItemTouchHelper.Callback appItemTouchHelperCallback = new AppItemTouchHelperCallback(mGBDeviceAppAdapter);
-        appManagementTouchHelper = new ItemTouchHelper(appItemTouchHelperCallback);
-
-        appManagementTouchHelper.attachToRecyclerView(appListView);
         return rootView;
     }
 
     protected void sendOrderToDevice(String concatFilename) {
         ArrayList<UUID> uuids = new ArrayList<>();
-        for (GBDeviceApp gbDeviceApp : mGBDeviceAppAdapter.getAppList()) {
+        for (GBDeviceApp gbDeviceApp : mGBDeviceAppAdapter.getItemList()) {
             uuids.add(gbDeviceApp.getUUID());
         }
         if (concatFilename != null) {
@@ -275,21 +295,45 @@ public abstract class AbstractAppManagerFragment extends Fragment {
         GBApplication.deviceService().onAppReorder(uuids.toArray(new UUID[uuids.size()]));
     }
 
-    public boolean openPopupMenu(View view, GBDeviceApp deviceApp) {
+    public boolean openPopupMenu(View view, int position) {
         PopupMenu popupMenu = new PopupMenu(getContext(), view);
         popupMenu.getMenuInflater().inflate(R.menu.appmanager_context, popupMenu.getMenu());
         Menu menu = popupMenu.getMenu();
-        final GBDeviceApp selectedApp = deviceApp;
+        final GBDeviceApp selectedApp = appList.get(position);
 
         if (!selectedApp.isInCache()) {
             menu.removeItem(R.id.appmanager_app_reinstall);
             menu.removeItem(R.id.appmanager_app_delete_cache);
+        }
+        if (!PebbleProtocol.UUID_PEBBLE_HEALTH.equals(selectedApp.getUUID())) {
+            menu.removeItem(R.id.appmanager_health_activate);
+            menu.removeItem(R.id.appmanager_health_deactivate);
+        }
+        if (!PebbleProtocol.UUID_WORKOUT.equals(selectedApp.getUUID())) {
+            menu.removeItem(R.id.appmanager_hrm_activate);
+            menu.removeItem(R.id.appmanager_hrm_deactivate);
+        }
+        if (!PebbleProtocol.UUID_WEATHER.equals(selectedApp.getUUID())) {
+            menu.removeItem(R.id.appmanager_weather_activate);
+            menu.removeItem(R.id.appmanager_weather_deactivate);
+            menu.removeItem(R.id.appmanager_weather_install_provider);
         }
         if (selectedApp.getType() == GBDeviceApp.Type.APP_SYSTEM || selectedApp.getType() == GBDeviceApp.Type.WATCHFACE_SYSTEM) {
             menu.removeItem(R.id.appmanager_app_delete);
         }
         if (!selectedApp.isConfigurable()) {
             menu.removeItem(R.id.appmanager_app_configure);
+        }
+
+        if (PebbleProtocol.UUID_WEATHER.equals(selectedApp.getUUID())) {
+            PackageManager pm = getActivity().getPackageManager();
+            try {
+                pm.getPackageInfo("ru.gelin.android.weather.notification", PackageManager.GET_ACTIVITIES);
+                menu.removeItem(R.id.appmanager_weather_install_provider);
+            } catch (PackageManager.NameNotFoundException e) {
+                menu.removeItem(R.id.appmanager_weather_activate);
+                menu.removeItem(R.id.appmanager_weather_deactivate);
+            }
         }
 
         switch (selectedApp.getType()) {
@@ -308,11 +352,12 @@ public abstract class AbstractAppManagerFragment extends Fragment {
                                              }
         );
 
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         popupMenu.show();
         return true;
     }
 
-    private boolean onContextItemSelected(MenuItem item, GBDeviceApp selectedApp) {
+    public boolean onContextItemSelected(MenuItem item, GBDeviceApp selectedApp) {
         switch (item.getItemId()) {
             case R.id.appmanager_app_delete_cache:
                 String baseName;
@@ -394,47 +439,5 @@ public abstract class AbstractAppManagerFragment extends Fragment {
     public void onDestroy() {
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mReceiver);
         super.onDestroy();
-    }
-
-    public class AppItemTouchHelperCallback extends ItemTouchHelper.Callback {
-
-        private final GBDeviceAppAdapter gbDeviceAppAdapter;
-
-        public AppItemTouchHelperCallback(GBDeviceAppAdapter gbDeviceAppAdapter) {
-            this.gbDeviceAppAdapter = gbDeviceAppAdapter;
-        }
-
-        @Override
-        public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-            //app reordering is not possible on old firmwares
-            if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) < 3 && !isCacheManager()) {
-                return 0;
-            }
-            //we only support up and down movement and only for moving, not for swiping apps away
-            return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
-        }
-
-        @Override
-        public boolean isLongPressDragEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
-            gbDeviceAppAdapter.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
-            return true;
-        }
-
-        @Override
-        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-            //nothing to do
-        }
-
-        @Override
-        public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-            super.clearView(recyclerView, viewHolder);
-            onChangedAppOrder();
-        }
-
     }
 }
