@@ -54,7 +54,6 @@ import nodomain.freeyourgadget.gadgetbridge.adapter.GBDeviceAppAdapter;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDevice;
 import nodomain.freeyourgadget.gadgetbridge.impl.GBDeviceApp;
 import nodomain.freeyourgadget.gadgetbridge.model.DeviceService;
-import nodomain.freeyourgadget.gadgetbridge.service.devices.pebble.PebbleProtocol;
 import nodomain.freeyourgadget.gadgetbridge.util.FileUtils;
 import nodomain.freeyourgadget.gadgetbridge.util.PebbleUtils;
 
@@ -205,28 +204,6 @@ public abstract class AbstractAppManagerFragment extends Fragment {
                             cachedAppList.add(new GBDeviceApp(UUID.fromString("cf1e816a-9db0-4511-bbb8-f60c48ca8fac"), "Golf (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
                         }
                         */
-                        if (mGBDevice != null) {
-                            if (PebbleUtils.hasHealth(mGBDevice.getModel())) {
-                                if (baseName.equals(PebbleProtocol.UUID_PEBBLE_HEALTH.toString())) {
-                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_PEBBLE_HEALTH, "Health (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
-                                    continue;
-                                }
-                            }
-                            if (PebbleUtils.hasHRM(mGBDevice.getModel())) {
-                                if (baseName.equals(PebbleProtocol.UUID_WORKOUT.toString())) {
-                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_WORKOUT, "Workout (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
-                                    continue;
-                                }
-                            }
-                            if (PebbleUtils.getFwMajor(mGBDevice.getFirmwareVersion()) >= 4) {
-                                if (baseName.equals("3af858c3-16cb-4561-91e7-f1ad2df8725f")) {
-                                    cachedAppList.add(new GBDeviceApp(UUID.fromString(baseName), "Kickstart (System)", "Pebble Inc.", "", GBDeviceApp.Type.WATCHFACE_SYSTEM));
-                                }
-                                if (baseName.equals(PebbleProtocol.UUID_WEATHER.toString())) {
-                                    cachedAppList.add(new GBDeviceApp(PebbleProtocol.UUID_WEATHER, "Weather (System)", "Pebble Inc.", "", GBDeviceApp.Type.APP_SYSTEM));
-                                }
-                            }
-                        }
                         if (uuids == null) {
                             cachedAppList.add(new GBDeviceApp(UUID.fromString(baseName), baseName, "N/A", "", GBDeviceApp.Type.UNKNOWN));
                         }
@@ -308,35 +285,11 @@ public abstract class AbstractAppManagerFragment extends Fragment {
             menu.removeItem(R.id.appmanager_app_reinstall);
             menu.removeItem(R.id.appmanager_app_delete_cache);
         }
-        if (!PebbleProtocol.UUID_PEBBLE_HEALTH.equals(selectedApp.getUUID())) {
-            menu.removeItem(R.id.appmanager_health_activate);
-            menu.removeItem(R.id.appmanager_health_deactivate);
-        }
-        if (!PebbleProtocol.UUID_WORKOUT.equals(selectedApp.getUUID())) {
-            menu.removeItem(R.id.appmanager_hrm_activate);
-            menu.removeItem(R.id.appmanager_hrm_deactivate);
-        }
-        if (!PebbleProtocol.UUID_WEATHER.equals(selectedApp.getUUID())) {
-            menu.removeItem(R.id.appmanager_weather_activate);
-            menu.removeItem(R.id.appmanager_weather_deactivate);
-            menu.removeItem(R.id.appmanager_weather_install_provider);
-        }
         if (selectedApp.getType() == GBDeviceApp.Type.APP_SYSTEM || selectedApp.getType() == GBDeviceApp.Type.WATCHFACE_SYSTEM) {
             menu.removeItem(R.id.appmanager_app_delete);
         }
         if (!selectedApp.isConfigurable()) {
             menu.removeItem(R.id.appmanager_app_configure);
-        }
-
-        if (PebbleProtocol.UUID_WEATHER.equals(selectedApp.getUUID())) {
-            PackageManager pm = getActivity().getPackageManager();
-            try {
-                pm.getPackageInfo("ru.gelin.android.weather.notification", PackageManager.GET_ACTIVITIES);
-                menu.removeItem(R.id.appmanager_weather_install_provider);
-            } catch (PackageManager.NameNotFoundException e) {
-                menu.removeItem(R.id.appmanager_weather_activate);
-                menu.removeItem(R.id.appmanager_weather_deactivate);
-            }
         }
 
         switch (selectedApp.getType()) {
